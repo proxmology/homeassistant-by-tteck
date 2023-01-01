@@ -82,7 +82,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -d /opt/zigbee2mqtt ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -124,7 +124,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -281,9 +281,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -304,6 +306,46 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+function update_script() {
+clear
+header_info
+cd /opt/zigbee2mqtt
+msg_info "Checking for Backup Directory"
+if [ -d data-backup ]; then
+   echo "ERROR: Backup directory exists. May be previous restoring was failed?"
+   echo "1. Save 'data-backup' and 'data' dirs to safe location to make possibility to restore config later."
+   echo "2. Manually delete 'data-backup' dir and try again."
+   exit 1
+fi
+msg_ok "No Backup Directory Exists"
+
+msg_info "Stopping Zigbee2MQTT"
+systemctl stop zigbee2mqtt
+msg_ok "Stopped Zigbee2MQTT"
+
+msg_info "Creating Backup of Configuration"
+cp -R data data-backup
+msg_ok "Created Backup of Configuration"
+
+msg_info "Updating Zigbee2MQTT"
+git pull
+msg_ok "Updated Zigbee2MQTT"
+
+msg_info "Installing Dependencies"
+npm ci
+msg_ok "Installed Dependencies"
+
+msg_info "Restoring Configuration"
+cp -R data-backup/* data
+rm -rf data-backup
+msg_ok "Restored Configuration"
+
+msg_info "Starting Zigbee2MQTT"
+systemctl start zigbee2mqtt
+msg_ok "Started Zigbee2MQTT"
+msg_ok "Update Successful"
+exit
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
