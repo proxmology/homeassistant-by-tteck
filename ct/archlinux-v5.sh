@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+function header_info {
+  cat <<"EOF"
+    ___              __       __    _                 
+   /   |  __________/ /_ v4  / /   (_)___  __  ___  __
+  / /| | / ___/ ___/ __ \   / /   / / __ \/ / / / |/_/
+ / ___ |/ /  / /__/ / / /  / /___/ / / / / /_/ />  <  
+/_/  |_/_/   \___/_/ /_/  /_____/_/_/ /_/\__,_/_/|_|  
+                                                      
+EOF
+}
 echo -e "Loading..."
 APP="Arch Linux"
 var_disk="1"
@@ -41,16 +51,7 @@ else
   echo -e "⚠ User exited script \n"
   exit
 fi
-function header_info {
-  cat <<"EOF"
-    ___              __       __    _                 
-   /   |  __________/ /_ v4  / /   (_)___  __  ___  __
-  / /| | / ___/ ___/ __ \   / /   / / __ \/ / / / |/_/
- / ___ |/ /  / /__/ / / /  / /___/ / / / / /_/ />  <  
-/_/  |_/_/   \___/_/ /_/  /_____/_/_/ /_/\__,_/_/|_|  
-                                                      
-EOF
-}
+
 function msg_info() {
   local msg="$1"
   echo -ne " ${HOLD} ${YW}${msg}..."
@@ -97,7 +98,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -254,9 +255,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
