@@ -81,7 +81,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -d /opt/zwave-js-ui ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -123,7 +123,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -280,9 +280,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -303,6 +305,30 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+function update_script() {
+clear
+header_info
+RELEASE=$(curl -s https://api.github.com/repos/zwave-js/zwave-js-ui/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
+msg_info "Stopping Z-wave JS UI"
+systemctl stop zwave-js-ui.service
+msg_ok "Stopped Z-wave JS UI"
+
+msg_info "Updating Z-wave JS UI"
+wget https://github.com/zwave-js/zwave-js-ui/releases/download/${RELEASE}/zwave-js-ui-${RELEASE}-linux.zip &>/dev/null
+unzip zwave-js-ui-${RELEASE}-linux.zip &>/dev/null
+\cp -R zwave-js-ui-linux /opt/zwave-js-ui
+msg_ok "Updated Z-wave JS UI"
+
+msg_info "Starting Z-wave JS UI"
+systemctl enable --now zwave-js-ui.service
+msg_ok "Started Z-wave JS UI"
+
+msg_info "Cleanup"
+rm -rf zwave-js-ui-${RELEASE}-linux.zip zwave-js-ui-linux store
+msg_ok "Cleaned"
+msg_ok "Updated Successfully!\n"
+exit
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
