@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+function header_info {
   cat <<"EOF"
     ____                                      _____                 
    / __ \____ ____  ____ ___  ____  ____     / ___/__v5______  _____
@@ -7,6 +8,7 @@
 /_____/\__,_/\___/_/ /_/ /_/\____/_/ /_/   /____/\__, /_/ /_/\___/  
                                                 /____/              
 EOF
+}
 echo -e "Loading..."
 APP="Daemon Sync"
 var_disk="8"
@@ -14,9 +16,8 @@ var_cpu="1"
 var_ram="512"
 var_os="debian"
 var_version="11"
-NSAPP=$(echo ${APP,,} | tr -d ' ')
 var_install="${NSAPP}-install"
-NEXTID=$(pvesh get /cluster/nextid)
+NSAPP=$(echo ${APP,,} | tr -d ' ')
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -28,6 +29,7 @@ CL=$(echo "\033[m")
 BFR="\\r\\033[K"
 HOLD="-"
 CM="${GN}✓${CL}"
+CROSS="${RD}✗${CL}"
 set -o errexit
 set -o errtrace
 set -o nounset
@@ -43,16 +45,7 @@ function error_exit() {
   echo -e "$flag $msg" 1>&2
   exit $EXIT
 }
-if (whiptail --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
-  echo "User selected Yes"
-else
-  clear
-  echo -e "⚠ User exited script \n"
-  exit
-fi
-function header_info {
 
-}
 function msg_info() {
   local msg="$1"
   echo -ne " ${HOLD} ${YW}${msg}..."
@@ -61,6 +54,12 @@ function msg_ok() {
   local msg="$1"
   echo -e "${BFR} ${CM} ${GN}${msg}${CL}"
 }
+
+function msg_error() {
+    local msg="$1"
+    echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
+}
+
 function PVE_CHECK() {
   PVE=$(pveversion | grep "pve-manager/7" | wc -l)
   if [[ $PVE != 1 ]]; then
@@ -70,6 +69,30 @@ function PVE_CHECK() {
     exit
   fi
 }
+
+if command -v pveversion >/dev/null 2>&1; then
+  if (whiptail --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
+    NEXTID=$(pvesh get /cluster/nextid)
+  else
+    clear
+    echo -e "⚠ User exited script \n"
+    exit
+  fi
+fi
+if ! command -v pveversion >/dev/null 2>&1; then
+  if [[ ! -d /opt/daemonsync ]]; then
+    msg_error "No ${APP} Installation Found!";
+    exit 
+  fi
+  if (whiptail --title "${APP} LXC UPDATE" --yesno "This will update ${APP} LXC.  Proceed?" 10 58); then
+    echo "User selected Update"
+    else
+    clear
+    echo -e "⚠ User exited script \n"
+    exit
+  fi
+fi
+
 function default_settings() {
   echo -e "${DGN}Using Container Type: ${BGN}Unprivileged${CL} ${RD}NO DEVICE PASSTHROUGH${CL}"
   CT_TYPE="1"
@@ -99,7 +122,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -256,9 +279,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
