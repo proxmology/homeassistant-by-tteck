@@ -77,29 +77,31 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
-apt-get install -y git &>/dev/null
-apt-get install -y make &>/dev/null
-apt-get install -y g++ &>/dev/null
-apt-get install -y gcc &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y git
+$STD apt-get install -y make
+$STD apt-get install -y g++
+$STD apt-get install -y gcc
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &>/dev/null
+wget -qL https://deb.nodesource.com/setup_18.x
+$STD bash setup_18.x
+rm setup_18.x
 msg_ok "Set up Node.js Repository"
 
 msg_info "Installing Node.js"
-apt-get install -y nodejs &>/dev/null
+$STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Setting up Zigbee2MQTT Repository"
-git clone https://github.com/Koenkk/zigbee2mqtt.git /opt/zigbee2mqtt &>/dev/null
+$STD git clone https://github.com/Koenkk/zigbee2mqtt.git /opt/zigbee2mqtt
 msg_ok "Set up Zigbee2MQTT Repository"
 
 read -r -p "Switch to Edge/dev branch? (y/N) " prompt
@@ -110,11 +112,11 @@ else
 fi
 
 msg_info "Installing Zigbee2MQTT"
-cd /opt/zigbee2mqtt &>/dev/null
+cd /opt/zigbee2mqtt
 if [[ $DEV == "y" ]]; then
-  git checkout dev &>/dev/null
+$STD git checkout dev
 fi
-npm ci &>/dev/null
+$STD npm ci
 msg_ok "Installed Zigbee2MQTT"
 
 msg_info "Creating Service"
@@ -132,7 +134,7 @@ Restart=always
 User=root
 [Install]
 WantedBy=multi-user.target" >$service_path
-systemctl enable zigbee2mqtt.service &>/dev/null
+$STD systemctl enable zigbee2mqtt.service
 msg_ok "Created Service"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -158,6 +160,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
