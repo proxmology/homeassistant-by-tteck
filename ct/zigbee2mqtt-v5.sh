@@ -329,11 +329,11 @@ cp -R data data-backup
 msg_ok "Created Backup of Configuration"
 
 msg_info "Updating Zigbee2MQTT"
-git pull
+git pull &>/dev/null
 msg_ok "Updated Zigbee2MQTT"
 
 msg_info "Installing Dependencies"
-npm ci
+npm ci &>/dev/null
 msg_ok "Installed Dependencies"
 
 msg_info "Restoring Configuration"
