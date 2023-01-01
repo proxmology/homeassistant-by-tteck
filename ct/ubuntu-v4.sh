@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+function header_info {
+  cat <<"EOF"
+   __  ____                __       
+  / / / / /_v5__  ______  / /___  __
+ / / / / __ \/ / / / __ \/ __/ / / /
+/ /_/ / /_/ / /_/ / / / / /_/ /_/ / 
+\____/_.___/\__,_/_/ /_/\__/\__,_/  
+ 
+EOF
+}
 echo -e "Loading..."
 APP="Ubuntu"
 var_disk="2"
@@ -6,9 +16,8 @@ var_cpu="1"
 var_ram="512"
 var_os="ubuntu"
 var_version="22.04"
+var_install="${NSAPP}-v5-install"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
-var_install="${NSAPP}-install"
-NEXTID=$(pvesh get /cluster/nextid)
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -20,6 +29,7 @@ CL=$(echo "\033[m")
 BFR="\\r\\033[K"
 HOLD="-"
 CM="${GN}✓${CL}"
+CROSS="${RD}✗${CL}"
 set -o errexit
 set -o errtrace
 set -o nounset
@@ -35,30 +45,22 @@ function error_exit() {
   echo -e "$flag $msg" 1>&2
   exit $EXIT
 }
-if (whiptail --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
-  echo "User selected Yes"
-else
-  clear
-  echo -e "⚠ User exited script \n"
-  exit
-fi
-function header_info {
-  echo -e "${YW}
-   __  ____                __       
-  / / / / /_v4__  ______  / /___  __
- / / / / __ \/ / / / __ \/ __/ / / /
-/ /_/ / /_/ / /_/ / / / / /_/ /_/ / 
-\____/_.___/\__,_/_/ /_/\__/\__,_/  
-${CL}"
-}
+
 function msg_info() {
   local msg="$1"
   echo -ne " ${HOLD} ${YW}${msg}..."
 }
+
 function msg_ok() {
   local msg="$1"
   echo -e "${BFR} ${CM} ${GN}${msg}${CL}"
 }
+
+function msg_error() {
+    local msg="$1"
+    echo -e "${BFR} ${CROSS} ${RD}${msg}${CL}"
+}
+
 function PVE_CHECK() {
   PVE=$(pveversion | grep "pve-manager/7" | wc -l)
   if [[ $PVE != 1 ]]; then
@@ -68,6 +70,30 @@ function PVE_CHECK() {
     exit
   fi
 }
+
+if command -v pveversion >/dev/null 2>&1; then
+  if (whiptail --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
+    NEXTID=$(pvesh get /cluster/nextid)
+  else
+    clear
+    echo -e "⚠ User exited script \n"
+    exit
+  fi
+fi
+if ! command -v pveversion >/dev/null 2>&1; then
+  if [[ ! -d /opt/Shinobi ]]; then
+    msg_error "No ${APP} Installation Found!";
+    exit 
+  fi
+  if (whiptail --title "${APP} LXC UPDATE" --yesno "This will update ${APP} LXC.  Proceed?" 10 58); then
+    echo "User selected Update"
+    else
+    clear
+    echo -e "⚠ User exited script \n"
+    exit
+  fi
+fi
+
 function default_settings() {
   echo -e "${DGN}Using ${var_os} Version: ${BGN}${var_version}${CL}"
   echo -e "${DGN}Using Container Type: ${BGN}Unprivileged${CL} ${RD}NO DEVICE PASSTHROUGH${CL}"
@@ -102,6 +128,7 @@ function default_settings() {
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
+  VERB2="silent"
   echo -e "${BL}Creating a ${APP} LXC using the above default settings${CL}"
 }
 function advanced_settings() {
@@ -275,7 +302,7 @@ function advanced_settings() {
     advanced_settings
   fi
 }
-function start_script() {
+function install_script() {
   if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
     header_info
     echo -e "${BL}Using Default Settings${CL}"
@@ -287,7 +314,7 @@ function start_script() {
   fi
 }
 clear
-start_script
+if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
 if [ "$VERB" == "yes" ]; then set -x; fi
 if [ "$CT_TYPE" == "1" ]; then
   FEATURES="nesting=1,keyctl=1"
@@ -297,6 +324,7 @@ fi
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 export VERBOSE=$VERB
+export STD=$VERB2
 export SSH_ROOT=${SSH}
 export CTID=$CT_ID
 export PCT_OSTYPE=$var_os

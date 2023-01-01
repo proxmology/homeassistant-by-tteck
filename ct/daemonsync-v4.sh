@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+  cat <<"EOF"
+    ____                                      _____                 
+   / __ \____ ____  ____ ___  ____  ____     / ___/__v5______  _____
+  / / / / __  / _ \/ __  __ \/ __ \/ __ \    \__ \/ / / / __ \/ ___/
+ / /_/ / /_/ /  __/ / / / / / /_/ / / / /   ___/ / /_/ / / / / /__  
+/_____/\__,_/\___/_/ /_/ /_/\____/_/ /_/   /____/\__, /_/ /_/\___/  
+                                                /____/              
+EOF
 echo -e "Loading..."
 APP="Daemon Sync"
 var_disk="8"
@@ -43,14 +51,7 @@ else
   exit
 fi
 function header_info {
-  echo -e "${BL}
-    ____                                      _____                 
-   / __ \____ ____  ____ ___  ____  ____     / ___/__  ______  _____
-  / / / / __  / _ \/ __  __ \/ __ \/ __ \    \__ \/ / / / __ \/ ___/
- / /_/ / /_/ /  __/ / / / / / /_/ / / / /   ___/ / /_/ / / / / /__  
-/_____/\__,_/\___/_/ /_/ /_/\____/_/ /_/ v4/____/\__, /_/ /_/\___/  
-                                                /____/              
-${CL}"
+
 }
 function msg_info() {
   local msg="$1"
@@ -102,6 +103,7 @@ function default_settings() {
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
+  VERB2="silent"
   echo -e "${BL}Creating a ${APP} LXC using the above default settings${CL}"
 }
 function advanced_settings() {
@@ -267,7 +269,7 @@ function advanced_settings() {
     advanced_settings
   fi
 }
-function start_script() {
+function install_script() {
   if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
     header_info
     echo -e "${BL}Using Default Settings${CL}"
@@ -279,7 +281,7 @@ function start_script() {
   fi
 }
 clear
-start_script
+if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
 if [ "$VERB" == "yes" ]; then set -x; fi
 if [ "$CT_TYPE" == "1" ]; then
   FEATURES="nesting=1,keyctl=1"
@@ -289,6 +291,7 @@ fi
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 export VERBOSE=$VERB
+export STD=$VERB2
 export SSH_ROOT=${SSH}
 export CTID=$CT_ID
 export PCT_OSTYPE=$var_os

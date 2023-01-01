@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+  cat <<"EOF"
+    __  ______  __  _____________  ____  ________  ____________
+   / / / / __ \/  |/  / ____/ __ )/ __ \/  _/ __ \/ ____/ ____/
+  / /_/ / / / / /|_/ / __/ / __  / /_/ // // / / / / __/ __/   
+ / __  / /_/ / /  / / /___/ /_/ / _, _// // /_/ / /_/ / /___   
+/_/ /_/\____/_/v5/_/_____/_____/_/ |_/___/_____/\____/_____/   
+ 
+EOF
+}
 echo -e "Loading..."
 APP="Homebridge"
 var_disk="4"
@@ -43,14 +52,7 @@ else
   exit
 fi
 function header_info {
-  echo -e "${YW}
-    __  ______  __  _____________  ____  ________  ____________
-   / / / / __ \/  |/  / ____/ __ )/ __ \/  _/ __ \/ ____/ ____/
-  / /_/ / / / / /|_/ / __/ / __  / /_/ // // / / / / __/ __/   
- / __  / /_/ / /  / / /___/ /_/ / _, _// // /_/ / /_/ / /___   
-/_/ /_/\____/_/v4/_/_____/_____/_/ |_/___/_____/\____/_____/   
-${CL}"
-}
+
 function msg_info() {
   local msg="$1"
   echo -ne " ${HOLD} ${YW}${msg}..."
@@ -101,6 +103,7 @@ function default_settings() {
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
+  VERB2="silent"
   echo -e "${BL}Creating a ${APP} LXC using the above default settings${CL}"
 }
 function advanced_settings() {
@@ -266,7 +269,7 @@ function advanced_settings() {
     advanced_settings
   fi
 }
-function start_script() {
+function install_script() {
   if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
     header_info
     echo -e "${BL}Using Default Settings${CL}"
@@ -278,7 +281,7 @@ function start_script() {
   fi
 }
 clear
-start_script
+if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
 if [ "$VERB" == "yes" ]; then set -x; fi
 if [ "$CT_TYPE" == "1" ]; then
   FEATURES="nesting=1,keyctl=1"
@@ -288,6 +291,7 @@ fi
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 export VERBOSE=$VERB
+export STD=$VERB2
 export SSH_ROOT=${SSH}
 export CTID=$CT_ID
 export PCT_OSTYPE=$var_os

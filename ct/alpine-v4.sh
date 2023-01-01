@@ -102,6 +102,7 @@ function default_settings() {
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
+  VERB2="silent"
   echo -e "${BL}Creating a ${APP} LXC using the above default settings${CL}"
 }
 function advanced_settings() {
@@ -263,7 +264,7 @@ function advanced_settings() {
     advanced_settings
   fi
 }
-function start_script() {
+function install_script() {
   if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
     header_info
     echo -e "${BL}Using Default Settings${CL}"
@@ -275,7 +276,7 @@ function start_script() {
   fi
 }
 clear
-start_script
+if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
 if [ "$VERB" == "yes" ]; then set -x; fi
 if [ "$CT_TYPE" == "1" ]; then
   FEATURES="nesting=1,keyctl=1"
@@ -285,6 +286,7 @@ fi
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
 export VERBOSE=$VERB
+export STD=$VERB2
 export SSH_ROOT=${SSH}
 export CTID=$CT_ID
 export PCT_OSTYPE=$var_os
