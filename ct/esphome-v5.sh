@@ -81,7 +81,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -f /usr/local/bin/esphome ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -123,7 +123,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -280,9 +280,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
