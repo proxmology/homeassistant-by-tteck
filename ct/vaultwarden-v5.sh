@@ -323,8 +323,8 @@ UPD=$(whiptail --title "UPDATE" --radiolist --cancel-button Exit-Script "Choose 
 
 clear
 header_info
-echo -e "\n ⚠️  Ensure you set 2vCPU & 3072MiB RAM MIMIMUM!!! \n" 
 if [ "$UPD" == "1" ]; then
+echo -e "\n ⚠️  Ensure you set 2vCPU & 3072MiB RAM MIMIMUM!!! \n" 
 msg_info "Stopping Vaultwarden"
 systemctl stop vaultwarden.service
 msg_ok "Stopped Vaultwarden"
@@ -354,7 +354,6 @@ echo -e "\n ⚠️  Ensure you set resources back to normal settings \n"
 exit;
 fi
 if [ "$UPD" == "2" ]; then
-
 msg_info "Stopping Vaultwarden"
 systemctl stop vaultwarden.service
 msg_ok "Stopped Vaultwarden"
