@@ -306,6 +306,21 @@ function install_script() {
     advanced_settings
   fi
 }
+function update_script() {
+msg_info "Stopping ESPHome"
+systemctl stop esphomeDashboard
+msg_ok "Stopped ESPHome"
+
+msg_info "Updating ESPHome"
+pip3 install esphome --upgrade &>/dev/null
+msg_ok "Updated ESPHome"
+
+msg_info "Starting ESPHome"
+systemctl stop esphomeDashboard
+msg_ok "Started ESPHome"
+msg_ok "Update Successfull"
+exit
+}
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
 if [ "$VERB" == "yes" ]; then set -x; fi
