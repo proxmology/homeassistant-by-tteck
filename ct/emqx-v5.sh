@@ -81,6 +81,10 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
+  if [[ ! -f /etc/apt/sources.list.d/emqx_emqx.list ]]; then
+    msg_error "No ${APP} Installation Found!";
+    exit 
+  fi
   if (whiptail --title "${APP} LXC UPDATE" --yesno "This will update ${APP} LXC.  Proceed?" 10 58); then
     echo "User selected Update"
     else
