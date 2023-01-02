@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -76,19 +76,19 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
 msg_ok "Installed Dependencies"
 
 msg_info "Installing EMQX"
-curl -s https://packagecloud.io/install/repositories/emqx/emqx/script.deb.sh | bash &>/dev/null
-sudo apt-get install -y emqx >/dev/null
-systemctl enable --now emqx
+$STD bash <(curl -fsSL https://packagecloud.io/install/repositories/emqx/emqx/script.deb.sh)
+$STD apt-get install -y emqx
+$STD systemctl enable --now emqx
 msg_ok "Installed EMQX"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
