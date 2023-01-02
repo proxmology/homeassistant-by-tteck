@@ -331,8 +331,6 @@ fi
 if [ "$UPD" == "2" ]; then
 clear
 header_info
-echo -e "⚠️  Backup your flows before changing Themes"
-sleep 5
 THEME=$(whiptail --title "NODE-RED THEMES" --radiolist --cancel-button Exit-Script "Choose Theme" 15 58 6 \
     "dark" "" OFF \
     "dracula" "" OFF \
@@ -352,7 +350,7 @@ msg_ok "Installed ${THEME} Theme"
 
 msg_info "Restarting ${APP}"
 systemctl restart nodered
-msg_ok "Started ${APP}"
+msg_ok "Restarted ${APP}"
 exit
 fi
 }
