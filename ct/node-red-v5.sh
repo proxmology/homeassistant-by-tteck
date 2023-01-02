@@ -314,9 +314,18 @@ UPD=$(whiptail --title "UPDATE" --radiolist --cancel-button Exit-Script "Choose 
 clear
 header_info
 if [ "$UPD" == "1" ]; then
+msg_info "Stopping ${APP}"
+systemctl stop nodered
+msg_ok "Stopped ${APP}"
+
 msg_info "Updating ${APP}"
 npm install -g --unsafe-perm node-red &>/dev/null
 msg_ok "Updated ${APP}"
+
+msg_info "Starting ${APP}"
+systemctl start nodered
+msg_ok "Started ${APP}"
+msg_ok "Update Successful"
 exit
 fi
 if [ "$UPD" == "2" ]; then
@@ -338,6 +347,10 @@ sed -i 's|//theme: "",|theme: "",|g' /root/.node-red/settings.js
 npm install @node-red-contrib-themes/${THEME} &>/dev/null
 sed -i "{s/theme: ".*"/theme: "${THEME}"/g}" /root/.node-red/settings.js
 msg_ok "Installed ${THEME} Theme"
+
+msg_info "Restarting ${APP}"
+systemctl restart nodered
+msg_ok "Started ${APP}"
 exit
 fi
 }
