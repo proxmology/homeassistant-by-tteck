@@ -142,7 +142,7 @@ $STD make install
 rm -rf /opt/jbig2enc
 msg_ok "Installed JBIG2"
 
-msg_info "Downloading Paperless-ngx"
+msg_info "Installing Paperless-ngx (Patience)"
 Paperlessngx=$(wget -q https://github.com/paperless-ngx/paperless-ngx/releases/latest -O - | grep "title>Release" | cut -d " " -f 5)
 cd /opt
 $STD wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz 
@@ -156,7 +156,7 @@ sed -i -e 's|-e git+https://github.com/paperless-ngx/django-q.git|git+https://gi
 
 $STD pip install --upgrade pip
 $STD pip install -r requirements.txt
-msg_ok "Downloaded Paperless-ngx"
+msg_ok "Installed Paperless-ngx"
 
 msg_info "Setting up database"
 DB_USER=paperless
@@ -202,6 +202,7 @@ echo "Paperless-ngx WebUI Password" >>~/paperless.creds
 echo $DB_PASS >>~/paperless.creds
 msg_ok "Set up admin Paperless-ngx User & Password"
 
+msg_info "Creating Services"
 cat <<EOF >/etc/systemd/system/paperless-scheduler.service
 [Unit]
 Description=Paperless Celery beat
@@ -261,7 +262,7 @@ sed -i -e 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /et
 systemctl daemon-reload
 $STD systemctl enable --now paperless-consumer paperless-webserver paperless-scheduler paperless-task-queue.service
 
-msg_ok "Finished installing Paperless-ngx"
+msg_ok "Created Services"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
 if [[ $PASS != $ ]]; then
