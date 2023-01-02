@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,26 +77,26 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
-apt-get install -y git &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y git
 msg_ok "Installed Dependencies"
 
 msg_info "Installing pip3"
-apt-get install -y python3-pip &>/dev/null
+$STD apt-get install -y python3-pip
 msg_ok "Installed pip3"
 
 msg_info "Installing ESPHome"
-pip3 install esphome &>/dev/null
+$STD pip3 install esphome
 msg_ok "Installed ESPHome"
 
 msg_info "Installing ESPHome Dashboard"
-pip3 install tornado esptool &>/dev/null
+$STD pip3 install tornado esptool
 
 service_path="/etc/systemd/system/esphomeDashboard.service"
 echo "[Unit]
@@ -108,7 +108,7 @@ Restart=always
 User=root
 [Install]
 WantedBy=multi-user.target" >$service_path
-systemctl enable esphomeDashboard.service &>/dev/null
+$STD systemctl enable esphomeDashboard.service
 systemctl start esphomeDashboard
 msg_ok "Installed ESPHome Dashboard"
 
@@ -135,6 +135,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
