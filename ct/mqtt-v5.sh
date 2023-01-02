@@ -73,26 +73,25 @@ function PVE_CHECK() {
 if command -v pveversion >/dev/null 2>&1; then
   if (whiptail --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
     NEXTID=$(pvesh get /cluster/nextid)
-  else
+    else
     clear
     echo -e "⚠ User exited script \n"
     exit
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /etc/docker ]]; then
+  if [[ ! -f /etc/apt/sources.list.d/mosquitto-bullseye.list ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
-  if (whiptail --title "${APP} LXC UPDATE" --yesno "This will update ${APP} LXC. Proceed?" 10 58); then
-    echo "User selected Yes"
-  else
+  if (whiptail --title "${APP} LXC UPDATE" --yesno "This will update ${APP} LXC.  Proceed?" 10 58); then
+    echo "User selected Update"
+    else
     clear
     echo -e "⚠ User exited script \n"
     exit
   fi
 fi
-
 function default_settings() {
   echo -e "${DGN}Using Container Type: ${BGN}Unprivileged${CL} ${RD}NO DEVICE PASSTHROUGH${CL}"
   CT_TYPE="1"
@@ -122,10 +121,8 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
-  echo -e "${DGN}(ZFS) Enable Fuse Overlayfs: ${BGN}No${CL}"
-  FUSE="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
   VERB2="silent"
@@ -278,13 +275,6 @@ function advanced_settings() {
       echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
       SSH="no"
   fi
-  if (whiptail --defaultno --title "FUSE OVERLAYFS" --yesno "(ZFS) Enable Fuse Overlayfs?" 10 58); then
-      echo -e "${DGN}(ZFS) Enable Fuse Overlayfs: ${BGN}Yes${CL}"
-      FUSE="yes"
-  else
-      echo -e "${DGN}(ZFS) Enable Fuse Overlayfs: ${BGN}No${CL}"
-      FUSE="no"
-  fi
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
@@ -303,6 +293,7 @@ function advanced_settings() {
     advanced_settings
   fi
 }
+
 function install_script() {
   if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
     header_info
@@ -314,6 +305,7 @@ function install_script() {
     advanced_settings
   fi
 }
+
 function update_script() {
 clear
 header_info
@@ -321,19 +313,20 @@ msg_info "Updating ${APP} LXC"
 apt-get update &>/dev/null
 apt-get -y upgrade &>/dev/null
 msg_ok "Updated ${APP} LXC"
+msg_ok "Update Successfull"
 exit
 }
+
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
 if [ "$VERB" == "yes" ]; then set -x; fi
-if [ "$FUSE" == "yes" ]; then 
-FEATURES="fuse=1,keyctl=1,nesting=1"
+if [ "$CT_TYPE" == "1" ]; then
+  FEATURES="nesting=1,keyctl=1"
 else
-FEATURES="keyctl=1,nesting=1" 
+  FEATURES="nesting=1"
 fi
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
-export ST=$FUSE
 export VERBOSE=$VERB
 export STD=$VERB2
 export SSH_ROOT=${SSH}
