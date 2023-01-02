@@ -378,7 +378,7 @@ msg_ok "Started Paperless-ngx"
 msg_ok "Updated Successfully!\n"
 exit
 fi
-if [ "$UPD" == "1" ]; then
+if [ "$UPD" == "2" ]; then
 clear
 header_info
 cat paperless.creds
