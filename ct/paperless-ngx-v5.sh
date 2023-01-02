@@ -310,28 +310,35 @@ function update_script() {
 RELEASE=$(curl -s https://api.github.com/repos/paperless-ngx/paperless-ngx/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3) }')
 SER=/etc/systemd/system/paperless-task-queue.service
 
+UPD=$(whiptail --title "UPDATE" --radiolist --cancel-button Exit-Script "Choose Type" 8 58 2 \
+  "1" "Update Paperless-ngx to $RELEASE" ON \
+  "2" "Paperless-ngx Credentials" OFF \
+  3>&1 1>&2 2>&3)
+clear
+header_info
+if [ "$UPD" == "1" ]; then
 msg_info "Stopping Paperless-ngx"
 systemctl stop paperless-consumer paperless-webserver paperless-scheduler
-if [ -f "$SER" ]; then
+  if [ -f "$SER" ]; then
    systemctl stop paperless-task-queue.service
-fi
+  fi
 sleep 1
 msg_ok "Stopped Paperless-ngx"
 
 msg_info "Updating to ${RELEASE}"
-if [ "$(dpkg -l | awk '/libmariadb-dev-compat/ {print }'|wc -l)" != 1 ]; then apt-get install -y libmariadb-dev-compat; fi &>/dev/null
-wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$RELEASE/paperless-ngx-$RELEASE.tar.xz &>/dev/null
-tar -xf paperless-ngx-$RELEASE.tar.xz &>/dev/null
-cp -r /opt/paperless/paperless.conf paperless-ngx/
-cp -r paperless-ngx/* /opt/paperless/
-cd /opt/paperless
-sed -i -e 's|-e git+https://github.com/paperless-ngx/django-q.git|git+https://github.com/paperless-ngx/django-q.git|' /opt/paperless/requirements.txt
-pip install -r requirements.txt &>/dev/null
-cd /opt/paperless/src
-/usr/bin/python3 manage.py migrate &>/dev/null
-if [ -f "$SER" ]; then
-    msg_ok "paperless-task-queue.service Exists."
-else
+  if [ "$(dpkg -l | awk '/libmariadb-dev-compat/ {print }'|wc -l)" != 1 ]; then apt-get install -y libmariadb-dev-compat; fi &>/dev/null
+  wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$RELEASE/paperless-ngx-$RELEASE.tar.xz &>/dev/null
+  tar -xf paperless-ngx-$RELEASE.tar.xz &>/dev/null
+  cp -r /opt/paperless/paperless.conf paperless-ngx/
+  cp -r paperless-ngx/* /opt/paperless/
+  cd /opt/paperless
+  sed -i -e 's|-e git+https://github.com/paperless-ngx/django-q.git|git+https://github.com/paperless-ngx/django-q.git|' /opt/paperless/requirements.txt
+  pip install -r requirements.txt &>/dev/null
+  cd /opt/paperless/src
+  /usr/bin/python3 manage.py migrate &>/dev/null
+  if [ -f "$SER" ]; then
+      msg_ok "paperless-task-queue.service Exists."
+  else
 cat <<EOF >/etc/systemd/system/paperless-task-queue.service
 [Unit]
 Description=Paperless Celery Workers
@@ -344,7 +351,7 @@ WantedBy=multi-user.target
 EOF
 systemctl enable paperless-task-queue &>/dev/null
 msg_ok "paperless-task-queue.service Created."
-fi
+  fi
 cat <<EOF >/etc/systemd/system/paperless-scheduler.service
 [Unit]
 Description=Paperless Celery beat
@@ -370,6 +377,13 @@ sleep 1
 msg_ok "Started Paperless-ngx"
 msg_ok "Updated Successfully!\n"
 exit
+fi
+if [ "$UPD" == "1" ]; then
+clear
+header_info
+cat paperless.creds
+exit
+fi
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
