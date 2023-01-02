@@ -306,6 +306,41 @@ function install_script() {
     advanced_settings
   fi
 }
+function update_script() {
+UPD=$(whiptail --title "UPDATE" --radiolist --cancel-button Exit-Script "Choose Type" 8 58 2 \
+  "1" "Update ${APP}" ON \
+  "2" "Install Themes" OFF \
+  3>&1 1>&2 2>&3)
+clear
+header_info
+if [ "$UPD" == "1" ]; then
+msg_info "Updating ${APP}"
+npm install -g --unsafe-perm node-red &>/dev/null
+msg_ok "Updated ${APP}"
+exit
+fi
+if [ "$UPD" == "2" ]; then
+clear
+header_info
+THEME=$(whiptail --title "NODE-RED THEMES" --radiolist --cancel-button Exit-Script "Choose Type" 15 58 6 \
+    "dark" "" OFF \
+    "dracula" "" OFF \
+    "midnight-red" "" ON \
+    "oled" "" OFF \
+    "solarized-dark" "" OFF \
+    "solarized-light" "" OFF \
+    3>&1 1>&2 2>&3)
+clear
+header_info
+msg_info "Installing ${THEME} Theme"    
+cd /root/.node-red
+sed -i 's|//theme: "",|theme: "",|g' /root/.node-red/settings.js
+npm install @node-red-contrib-themes/${THEME} &>/dev/null
+sed -i "{s/theme: ".*"/theme: "${THEME}"/g}" /root/.node-red/settings.js
+msg_ok "Installed ${THEME} Theme"
+exit
+fi
+}
 
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
