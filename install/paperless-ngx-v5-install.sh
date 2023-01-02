@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
 	trap - ERR
 	local reason="Unknown failure occurred."
@@ -77,12 +77,12 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Paperless-ngx Dependencies"
-apt-get install -y --no-install-recommends \
+$STD apt-get install -y --no-install-recommends \
 	python3 \
 	python3-pip \
 	python3-dev \
@@ -96,11 +96,11 @@ apt-get install -y --no-install-recommends \
 	libzbar0 \
 	poppler-utils \
 	default-libmysqlclient-dev \
-	sudo &>/dev/null
+	sudo
 msg_ok "Installed Paperless-ngx Dependencies"
 
 msg_info "Installing OCR Dependencies"
-apt-get install -y --no-install-recommends \
+$STD apt-get install -y --no-install-recommends \
 	unpaper \
 	ghostscript \
 	icc-profiles-free \
@@ -110,20 +110,20 @@ apt-get install -y --no-install-recommends \
 	pngquant \
 	zlib1g \
 	tesseract-ocr \
-	tesseract-ocr-eng &>/dev/null
+	tesseract-ocr-eng
 msg_ok "Installed OCR Dependencies"
 
 msg_info "Installing Extra Dependencies"
-apt-get install -y --no-install-recommends \
+$STD apt-get install -y --no-install-recommends \
 	redis \
 	postgresql \
 	build-essential \
 	python3-setuptools \
-	python3-wheel &>/dev/null
+	python3-wheel
 msg_ok "Installed Extra Dependencies"
 
 msg_info "Installing JBIG2"
-apt-get install -y --no-install-recommends \
+$STD apt-get install -y --no-install-recommends \
 	automake \
 	libtool \
 	pkg-config \
@@ -131,21 +131,21 @@ apt-get install -y --no-install-recommends \
 	curl \
 	libtiff-dev \
 	libpng-dev \
-	libleptonica-dev &>/dev/null
+	libleptonica-dev
 
-git clone https://github.com/agl/jbig2enc /opt/jbig2enc &>/dev/null
+$STD git clone https://github.com/agl/jbig2enc /opt/jbig2enc
 cd /opt/jbig2enc
-/bin/bash -c "./autogen.sh" &>/dev/null &&
-	/bin/bash -c "./configure && make" &>/dev/null &&
-	/bin/bash -c "make install" &>/dev/null
+$STD /bin/bash -c "./autogen.sh" && $STD 
+	/bin/bash -c "./configure && make" && $STD 
+	/bin/bash -c "make install"
 rm -rf /opt/jbig2enc
 msg_ok "Installed JBIG2"
 
 msg_info "Downloading Paperless-ngx"
 Paperlessngx=$(wget -q https://github.com/paperless-ngx/paperless-ngx/releases/latest -O - | grep "title>Release" | cut -d " " -f 5)
-cd /opt &&
-	wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz &>/dev/null &&
-	tar -xf paperless-ngx-$Paperlessngx.tar.xz -C /opt/ &>/dev/null &&
+cd /opt && $STD 
+	wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz && $STD 
+	tar -xf paperless-ngx-$Paperlessngx.tar.xz -C /opt/ &&
 	mv paperless-ngx paperless &&
 	rm paperless-ngx-$Paperlessngx.tar.xz
 cd /opt/paperless
@@ -153,8 +153,8 @@ cd /opt/paperless
 ## python 3.10+ doesn't like the '-e', so we remove it from this the requirements file
 sed -i -e 's|-e git+https://github.com/paperless-ngx/django-q.git|git+https://github.com/paperless-ngx/django-q.git|' /opt/paperless/requirements.txt
 
-/usr/bin/python3 -m pip install --upgrade pip &>/dev/null
-/usr/bin/python3 -m pip install -r requirements.txt &>/dev/null
+$STD /usr/bin/python3 -m pip install --upgrade pip
+$STD /usr/bin/python3 -m pip install -r requirements.txt
 msg_ok "Downloaded Paperless-ngx"
 
 msg_info "Setting up database"
@@ -162,8 +162,8 @@ DB_USER=paperless
 DB_PASS="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13)"
 DB_NAME=paperlessdb
 
-sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';" &>/dev/null
-sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER TEMPLATE template0;" &>/dev/null
+$STD sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';"
+$STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER TEMPLATE template0;"
 
 echo "Paperless-ngx Database User" >>~/paperless.creds
 echo $DB_USER >>~/paperless.creds
@@ -180,7 +180,7 @@ SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
 sed -i -e "s|#PAPERLESS_SECRET_KEY=change-me|PAPERLESS_SECRET_KEY=$SECRET_KEY|" /opt/paperless/paperless.conf
 
 cd /opt/paperless/src
-/usr/bin/python3 manage.py migrate &>/dev/null
+$STD /usr/bin/python3 manage.py migrate
 msg_ok "Set up database"
 
 msg_info "Setting up admin Paperless-ngx User & Password"
@@ -258,7 +258,7 @@ EOF
 sed -i -e 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
 
 systemctl daemon-reload
-systemctl enable --now paperless-consumer paperless-webserver paperless-scheduler paperless-task-queue.service &>/dev/null
+$STD systemctl enable --now paperless-consumer paperless-webserver paperless-scheduler paperless-task-queue.service
 
 msg_ok "Finished installing Paperless-ngx"
 
@@ -281,6 +281,6 @@ EOF
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
