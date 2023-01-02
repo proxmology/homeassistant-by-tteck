@@ -345,7 +345,7 @@ msg_info "Installing ${THEME} Theme"
 cd /root/.node-red
 sed -i 's|//theme: "",|theme: "",|g' /root/.node-red/settings.js
 npm install @node-red-contrib-themes/${THEME} &>/dev/null
-sed -i "{s/theme: ".*"/theme: "${THEME}"/g}" /root/.node-red/settings.js
+sed -i "{s/theme: ".*"/theme: '${THEME}"/g}" /root/.node-red/settings.js
 msg_ok "Installed ${THEME} Theme"
 
 msg_info "Restarting ${APP}"
