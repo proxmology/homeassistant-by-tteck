@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,24 +77,24 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
-apt-get install -y gnupg &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Mosquitto MQTT Broker"
-wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key &>/dev/null
-apt-key add mosquitto-repo.gpg.key &>/dev/null
+$STD wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+$STD apt-key add mosquitto-repo.gpg.key
 cd /etc/apt/sources.list.d/
-wget http://repo.mosquitto.org/debian/mosquitto-bullseye.list &>/dev/null
-apt-get update >/dev/null
-apt-get -y install mosquitto &>/dev/null
-apt-get -y install mosquitto-clients &>/dev/null
+$STD wget http://repo.mosquitto.org/debian/mosquitto-bullseye.list
+$STD apt-get update
+$STD apt-get -y install mosquitto
+$STD apt-get -y install mosquitto-clients
 msg_ok "Installed Mosquitto MQTT Broker"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -120,6 +120,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
