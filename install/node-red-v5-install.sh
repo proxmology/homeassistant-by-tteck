@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,25 +77,26 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y git
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Node.js Repository"
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &>/dev/null
+$STD bash <(curl -fsSL https://deb.nodesource.com/setup_18.x)
 msg_ok "Set up Node.js Repository"
 
 msg_info "Installing Node.js"
-apt-get install -y nodejs &>/dev/null
+$STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Installing Node-Red"
-npm install -g --unsafe-perm node-red &>/dev/null
+$STD npm install -g --unsafe-perm node-red
 msg_ok "Installed Node-Red"
 
 msg_info "Creating Service"
@@ -118,7 +119,7 @@ Group=root
 
 [Install]
 WantedBy=multi-user.target" >$service_path
-systemctl enable --now nodered.service &>/dev/null
+$STD systemctl enable --now nodered.service
 msg_ok "Created Service"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -144,6 +145,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
