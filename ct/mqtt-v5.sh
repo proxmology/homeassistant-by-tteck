@@ -17,7 +17,7 @@ var_ram="512"
 var_os="debian"
 var_version="11"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
-var_install="${NSAPP}-install"
+var_install="${NSAPP}-v5-install"
 NEXTID=$(pvesh get /cluster/nextid)
 INTEGER='^[0-9]+$'
 YW=`echo "\033[33m"`
@@ -70,6 +70,7 @@ function PVE_CHECK() {
     exit
   fi
 }
+
 if command -v pveversion >/dev/null 2>&1; then
   if (whiptail --title "${APP} LXC" --yesno "This will create a New ${APP} LXC. Proceed?" 10 58); then
     NEXTID=$(pvesh get /cluster/nextid)
@@ -129,6 +130,7 @@ function default_settings() {
   VERB2="silent"
   echo -e "${BL}Creating a ${APP} LXC using the above default settings${CL}"
 }
+
 function advanced_settings() {
 CT_TYPE=$(whiptail --title "CONTAINER TYPE" --radiolist --cancel-button Exit-Script "Choose Type" 8 58 2 \
 "1" "Unprivileged" ON \
@@ -281,6 +283,7 @@ else
   advanced_settings
 fi
 }
+
 function update_script() {
 clear
 header_info
