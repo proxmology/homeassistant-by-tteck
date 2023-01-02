@@ -135,26 +135,27 @@ $STD apt-get install -y --no-install-recommends \
 
 $STD git clone https://github.com/agl/jbig2enc /opt/jbig2enc
 cd /opt/jbig2enc
-$STD /bin/bash -c "./autogen.sh" && $STD 
-	/bin/bash -c "./configure && make" && $STD 
-	/bin/bash -c "make install"
+$STD bash ./autogen.sh
+$STD bash ./configure
+$STD make
+$STD make install
 rm -rf /opt/jbig2enc
 msg_ok "Installed JBIG2"
 
 msg_info "Downloading Paperless-ngx"
 Paperlessngx=$(wget -q https://github.com/paperless-ngx/paperless-ngx/releases/latest -O - | grep "title>Release" | cut -d " " -f 5)
-cd /opt && $STD 
-	wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz && $STD 
-	tar -xf paperless-ngx-$Paperlessngx.tar.xz -C /opt/ &&
-	mv paperless-ngx paperless &&
-	rm paperless-ngx-$Paperlessngx.tar.xz
+cd /opt
+$STD wget https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz 
+$STD tar -xf paperless-ngx-$Paperlessngx.tar.xz -C /opt/
+mv paperless-ngx paperless
+rm paperless-ngx-$Paperlessngx.tar.xz
 cd /opt/paperless
 
 ## python 3.10+ doesn't like the '-e', so we remove it from this the requirements file
 sed -i -e 's|-e git+https://github.com/paperless-ngx/django-q.git|git+https://github.com/paperless-ngx/django-q.git|' /opt/paperless/requirements.txt
 
-$STD /usr/bin/python3 -m pip install --upgrade pip
-$STD /usr/bin/python3 -m pip install -r requirements.txt
+$STD pip install --upgrade pip
+$STD pip install -r requirements.txt
 msg_ok "Downloaded Paperless-ngx"
 
 msg_info "Setting up database"
