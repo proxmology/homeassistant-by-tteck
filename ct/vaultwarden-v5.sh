@@ -315,9 +315,10 @@ WVRELEASE=$(curl -s https://api.github.com/repos/dani-garcia/bw_web_builds/relea
     grep "tag_name" |
     awk '{print substr($2, 2, length($2)-3) }')
     
-UPD=$(whiptail --title "UPDATE" --radiolist --cancel-button Exit-Script "Choose Type" 8 58 2 \
+UPD=$(whiptail --title "UPDATE" --radiolist --cancel-button Exit-Script "Choose Type" 8 58 3 \
   "1" "VaultWarden $VAULT" ON \
   "2" "Web-Vault $WVRELEASE" OFF \
+  "3" "Get Admin Token" OFF \
   3>&1 1>&2 2>&3)
 
 clear
@@ -372,6 +373,10 @@ systemctl start vaultwarden.service
 msg_ok "Started Vaultwarden"
 msg_ok "$WVRELEASE Update Successful"
 exit;
+fi
+if [ "$UPD" == "3" ]; then
+cat /opt/vaultwarden/.env | grep "ADMIN_TOKEN"
+exit
 fi
 }
 
