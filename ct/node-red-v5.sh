@@ -332,6 +332,7 @@ if [ "$UPD" == "2" ]; then
 clear
 header_info
 echo -e "⚠️  Backup your flows before changing Themes"
+sleep 5
 THEME=$(whiptail --title "NODE-RED THEMES" --radiolist --cancel-button Exit-Script "Choose Theme" 15 58 6 \
     "dark" "" OFF \
     "dracula" "" OFF \
