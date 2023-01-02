@@ -85,7 +85,7 @@ if ! command -v pveversion >/dev/null 2>&1; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
-  if (whiptail --title "${APP} LXC SUPPORT" --yesno "This provides support for ${APP} LXC.  Proceed?" 10 58); then
+  if (whiptail --title "${APP} LXC SUPPORT" --yesno "This provides Support for ${APP} LXC. Proceed?" 10 58); then
     echo "User selected support"
     else
     clear
