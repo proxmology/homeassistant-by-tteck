@@ -91,7 +91,10 @@ msg_ok "Installed Dependencies"
 
 msg_info "Setting up Grafana Repository"
 $STD apt-key add <(curl -fsSL https://packages.grafana.com/gpg.key)
-$STD echo "deb https://packages.grafana.com/oss/deb stable main" | tee -a /etc/apt/sources.list.d/grafana.list
+#$STD echo "deb https://packages.grafana.com/oss/deb stable main" | tee -a /etc/apt/sources.list.d/grafana.list
+cat <<EOF >/etc/apt/sources.list.d/grafana.list
+deb https://packages.grafana.com/oss/deb stable main
+EOF
 msg_ok "Set up Grafana Repository"
 
 msg_info "Installing Grafana"
