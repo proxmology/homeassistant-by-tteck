@@ -17,7 +17,7 @@ var_cpu="1"
 var_ram="512"
 var_os="debian"
 var_version="11"
-bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh)" || exit
+bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh)"
 function update_script() {
 clear
 header_info
