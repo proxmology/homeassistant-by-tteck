@@ -277,15 +277,4 @@ function advanced_settings() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
-}
-function install_script() {
-  if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
-    header_info
-    echo -e "${BL}Using Default Settings${CL}"
-    default_settings
-  else
-    header_info
-    echo -e "${RD}Using Advanced Settings${CL}"
-    advanced_settings
-  fi
-}
+
