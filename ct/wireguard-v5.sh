@@ -323,6 +323,14 @@ msg_ok "Update Successfull"
 exit
 fi
 if [ "$UPD" == "2" ]; then
+msg_info "Installing pip3"
+apt-get install -y python3-pip &>/dev/null
+pip install flask &>/dev/null
+pip install ifcfg &>/dev/null
+pip install flask_qrcode &>/dev/null
+pip install icmplib &>/dev/null
+msg_ok "Installed pip3"
+
 msg_info "Installing WGDashboard"
 WGDREL=$(curl -s https://api.github.com/repos/donaldzou/WGDashboard/releases/latest |
   grep "tag_name" |
