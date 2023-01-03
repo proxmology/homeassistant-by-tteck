@@ -320,8 +320,6 @@ apt-get update &>/dev/null
 apt-get -y upgrade &>/dev/null
 msg_ok "Updated ${APP} LXC"
 msg_ok "Update Successfull"
-echo -e "WGDashboard should be reachable by going to the following URL.
-         ${BL}http://${IP}:10086${CL} \n"
 exit
 fi
 if [ "$UPD" == "2" ]; then
@@ -355,6 +353,8 @@ systemctl daemon-reload
 systemctl enable wg-dashboard.service &>/dev/null
 systemctl start wg-dashboard.service &>/dev/null
 msg_ok "Created Service"
+echo -e "WGDashboard should be reachable by going to the following URL.
+         ${BL}http://${IP}:10086${CL} admin|admin \n"
 exit
 fi
 }
