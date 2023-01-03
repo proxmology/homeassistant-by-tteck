@@ -81,7 +81,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /etc/wgdashboard/ ]]; then
+  if [[ ! -d /etc/pivpn/wireguard ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
