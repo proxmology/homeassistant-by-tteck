@@ -335,6 +335,25 @@ sudo chmod u+x wgd.sh
 sudo ./wgd.sh install &>/dev/null
 sudo chmod -R 755 /etc/wireguard
 msg_ok "Installed WGDashboard"
+
+msg_info "Creating Service"
+service_path="/etc/systemd/system/wg-dashboard.service"
+echo "[Unit]
+After=netword.service
+
+[Service]
+WorkingDirectory=/etc/wgdashboard/src
+ExecStart=/usr/bin/python3 /etc/wgdashboard/src/dashboard.py
+Restart=always
+
+
+[Install]
+WantedBy=default.target" >$service_path
+chmod 664 /etc/systemd/system/wg-dashboard.service
+systemctl daemon-reload
+systemctl enable wg-dashboard.service &>/dev/null
+systemctl start wg-dashboard.service &>/dev/null
+msg_ok "Created Service"
 exit
 fi
 }
