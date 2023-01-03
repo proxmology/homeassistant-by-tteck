@@ -145,7 +145,7 @@ $STD pip install --upgrade pip
 $STD python3 -m pip install wheel
 $STD pip install mysqlclient
 $STD pip install psycopg2-binary
-$STD pip install homeassistant
+$STD pip install --pre homeassistant
 msg_ok "Installed Home Assistant-Core"
 
 # fix for inconsistent versions, hopefully the HA team will get this fixed
