@@ -107,7 +107,7 @@ WEBPASSWORD=$(openssl rand -base64 48)
 BLOCKING_ENABLED=true
 EOF
 
-$STD curl -sSL https://install.pi-hole.net | bash /dev/stdin --unattended
+$STD bash <(curl -fsSL https://install.pi-hole.net) /dev/stdin --unattended
 msg_ok "Installed Pi-hole"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
