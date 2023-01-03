@@ -392,7 +392,7 @@ msg_ok "Cleaned"
 msg_info "Starting ${APP}"
 systemctl enable --now heimdall.service &>/dev/null
 sleep 2
-msg_info "Started ${APP}"
+msg_ok "Started ${APP}"
 msg_ok "Update Successfull"
 exit
 }
