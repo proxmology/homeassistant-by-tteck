@@ -17,20 +17,9 @@ var_cpu="1"
 var_ram="512"
 var_os="debian"
 var_version="11"
-bash <(curl -fsSL https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh)
+
 #bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh)"
 
-function install_script() {
-  if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
-    header_info
-    echo -e "${BL}Using Default Settings${CL}"
-    default_settings
-  else
-    header_info
-    echo -e "${RD}Using Advanced Settings${CL}"
-    advanced_settings
-  fi
-}
 function update_script() {
 clear
 header_info
@@ -59,7 +48,7 @@ exit
 }
 
 clear
-if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
+if ! command -v pveversion >/dev/null 2>&1; then update_script; else bash <(curl -fsSL https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh); fi
 if [ "$VERB" == "yes" ]; then set -x; fi
 if [ "$CT_TYPE" == "1" ]; then
   FEATURES="nesting=1,keyctl=1"
