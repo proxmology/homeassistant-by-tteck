@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 NSAPP=$(echo ${APP,,} | tr -d ' ')
 var_install="${NSAPP}-v5-install"
 INTEGER='^[0-9]+$'
