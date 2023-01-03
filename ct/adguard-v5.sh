@@ -19,7 +19,7 @@ var_os="debian"
 var_version="11"
 bash <(curl -fsSL https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh)
 #bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/ct/debian-whip.sh)"
-}
+
 function install_script() {
   if (whiptail --title "SETTINGS" --yesno "Use Default Settings?" --no-button Advanced 10 58); then
     header_info
