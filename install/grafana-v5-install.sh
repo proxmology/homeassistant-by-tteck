@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,26 +77,26 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
-apt-get install -y gnupg &>/dev/null
-apt-get install -y apt-transport-https &>/dev/null
-apt-get install -y software-properties-common &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y gnupg
+$STD apt-get install -y apt-transport-https
+$STD apt-get install -y software-properties-common
 msg_ok "Installed Dependencies"
 
 msg_info "Setting up Grafana Repository"
-wget -qO- https://packages.grafana.com/gpg.key | sudo apt-key add - &>/dev/null
-echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list &>/dev/null
+$STD wget -qO- https://packages.grafana.com/gpg.key | sudo apt-key add - 
+$STD echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
 msg_ok "Set up Grafana Repository"
 
 msg_info "Installing Grafana"
-apt-get update &>/dev/null
-apt-get install -y grafana &>/dev/null
+$STD apt-get update
+$STD apt-get install -y grafana
 msg_ok "Installed Grafana"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -121,9 +121,9 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
   systemctl restart sshd
 fi
 systemctl start grafana-server
-systemctl enable grafana-server.service &>/dev/null
+$STD systemctl enable grafana-server.service
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
