@@ -104,14 +104,6 @@ $STD apt-get install -y sudo
 $STD apt-get install -y gunicorn
 msg_ok "Installed Dependencies"
 
-msg_info "Installing pip3"
-$STD apt-get install -y python3-pip
-$STD pip install flask
-$STD pip install ifcfg
-$STD pip install flask_qrcode
-$STD pip install icmplib
-msg_ok "Installed pip3"
-
 msg_info "Installing WireGuard (using pivpn.io)"
 $STD bash <(curl -fsSL https://install.pivpn.io) --unattended options.conf
 msg_ok "Installed WireGuard"
