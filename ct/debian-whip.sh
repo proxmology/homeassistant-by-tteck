@@ -277,4 +277,4 @@ function advanced_settings() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
-
+}
