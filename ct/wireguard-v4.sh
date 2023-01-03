@@ -17,8 +17,8 @@ var_cpu="1"
 var_ram="512"
 var_os="debian"
 var_version="11"
-var_install="${NSAPP}-v5-install"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
+var_install="${NSAPP}-v5-install"
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -82,11 +82,11 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -d /etc/wgdashboard/ ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
-  if (whiptail --title "${APP} LXC UPDATE" --yesno "This will update ${APP} LXC.  Proceed?" 10 58); then
+  if (whiptail --title "${APP} LXC SUPPORT" --yesno "This provides Support for ${APP} LXC. Proceed?" 10 58); then
     echo "User selected Update"
     else
     clear
@@ -124,7 +124,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -281,9 +281,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -304,6 +306,37 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+
+function update_script() {
+UPD=$(whiptail --title "SUPPORT" --radiolist --cancel-button Exit-Script "Choose Type" 8 58 2 \
+  "1" "Update ${APP} LXC" ON \
+  "2" "Install WGDashboard" OFF \
+  3>&1 1>&2 2>&3)
+clear
+header_info
+if [ "$UPD" == "1" ]; then
+msg_info "Updating ${APP} LXC"
+apt-get update &>/dev/null
+apt-get -y upgrade &>/dev/null
+msg_ok "Updated ${APP} LXC"
+msg_ok "Update Successfull"
+exit
+fi
+if [ "$UPD" == "2" ]; then
+msg_info "Installing WGDashboard"
+WGDREL=$(curl -s https://api.github.com/repos/donaldzou/WGDashboard/releases/latest |
+  grep "tag_name" |
+  awk '{print substr($2, 2, length($2)-3) }')
+
+git clone -b ${WGDREL} https://github.com/donaldzou/WGDashboard.git /etc/wgdashboard &>/dev/null
+cd /etc/wgdashboard/src
+sudo chmod u+x wgd.sh
+sudo ./wgd.sh install &>/dev/null
+sudo chmod -R 755 /etc/wireguard
+msg_ok "Installed WGDashboard"
+exit
+fi
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
@@ -338,7 +371,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/ct/c
 msg_info "Starting LXC Container"
 pct start $CTID
 msg_ok "Started LXC Container"
-lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/install/$var_install.sh)" || exit
+lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/install/$var_install.sh)" || exit
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
 pct set $CTID -description "# ${APP} LXC
 ### https://tteck.github.io/Proxmox/
