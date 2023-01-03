@@ -19,7 +19,6 @@ var_os="debian"
 var_version="11"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
 var_install="${NSAPP}-v5-install"
-NSAPP=$(echo ${APP,,} | tr -d ' ')
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -83,7 +82,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -d /opt/uptime-kuma ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -282,9 +281,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -305,6 +306,33 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+
+function update_script() {
+clear
+header_info
+msg_info "Stopping ${APP}"
+sudo systemctl stop uptime-kuma &>/dev/null
+msg_ok "Stopped ${APP}"
+
+cd /opt/uptime-kuma
+
+msg_info "Pulling ${APP} ${LATEST}"
+git fetch --all &>/dev/null
+git checkout $LATEST --force &>/dev/null
+git pull &>/dev/null
+msg_ok "Pulled ${APP} ${LATEST}"
+
+msg_info "Updating ${APP} to ${LATEST}"
+npm install --production &>/dev/null
+npm run download-dist &>/dev/null
+msg_ok "Updated ${APP}"
+
+msg_info "Starting ${APP}"
+sudo systemctl start uptime-kuma &>/dev/null
+msg_ok "Started ${APP}"
+msg_ok "Update Successfull"
+exit
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
