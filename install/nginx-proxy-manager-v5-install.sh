@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,13 +77,13 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get update &>/dev/null
-apt-get -y install \
+$STD apt-get update
+$STD apt-get -y install \
   sudo \
   curl \
   gnupg \
@@ -96,38 +96,39 @@ apt-get -y install \
   build-essential \
   python3-dev \
   git \
-  lsb-release &>/dev/null
+  lsb-release
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Python"
-apt-get install -y -q --no-install-recommends python3 python3-pip python3-venv &>/dev/null
-pip3 install --upgrade setuptools &>/dev/null
-pip3 install --upgrade pip &>/dev/null
-python3 -m venv /opt/certbot/ &>/dev/null
+$STD apt-get install -y -q --no-install-recommends python3 python3-pip python3-venv
+$STD pip3 install --upgrade setuptools
+$STD pip3 install --upgrade pip
+$STD python3 -m venv /opt/certbot/
 if [ "$(getconf LONG_BIT)" = "32" ]; then
-  python3 -m pip install --no-cache-dir -U cryptography==3.3.2 &>/dev/null
+  $STD python3 -m pip install --no-cache-dir -U cryptography==3.3.2
 fi
-python3 -m pip install --no-cache-dir cffi certbot &>/dev/null
+$STD python3 -m pip install --no-cache-dir cffi certbot
 msg_ok "Installed Python"
 
 msg_info "Installing Openresty"
-wget -q -O - https://openresty.org/package/pubkey.gpg | apt-key add - &>/dev/null
-codename=$(grep -Po 'VERSION="[0-9]+ \(\K[^)]+' /etc/os-release) &>/dev/null
-echo "deb http://openresty.org/package/debian $codename openresty" | tee /etc/apt/sources.list.d/openresty.list &>/dev/null
-apt-get -y update &>/dev/null
-apt-get -y install --no-install-recommends openresty &>/dev/null
+$STD apt-key add <(curl -fsSLhttps://openresty.org/package/pubkey.gpg)
+cat <<EOF >/etc/apt/sources.list.d/openresty.list
+deb http://openresty.org/package/debian bullseye openresty
+EOF
+$STD apt-get -y update
+$STD apt-get -y install --no-install-recommends openresty
 msg_ok "Installed Openresty"
 
 msg_info "Setting up Node.js Repository"
-curl -fsSL https://deb.nodesource.com/setup_16.x | bash - &>/dev/null
+$STD bash <(curl -fsSL https://deb.nodesource.com/setup_18.x)
 msg_ok "Set up Node.js Repository"
 
 msg_info "Installing Node.js"
-apt-get install -y nodejs &>/dev/null
+$STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Installing Yarn"
-npm install --global yarn &>/dev/null
+$STD npm install --global yarn
 msg_ok "Installed Yarn"
 
 RELEASE=$(curl -s https://api.github.com/repos/NginxProxyManager/nginx-proxy-manager/releases/latest |
@@ -135,8 +136,8 @@ RELEASE=$(curl -s https://api.github.com/repos/NginxProxyManager/nginx-proxy-man
   awk '{print substr($2, 3, length($2)-4) }')
 
 msg_info "Downloading Nginx Proxy Manager v${RELEASE}"
-wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE} -O - | tar -xz &>/dev/null
-cd ./nginx-proxy-manager-${RELEASE}
+$STD wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE} -O - | tar -xz
+cd nginx-proxy-manager-${RELEASE}
 msg_ok "Downloaded Nginx Proxy Manager v${RELEASE}"
 
 msg_info "Setting up Enviroment"
@@ -197,14 +198,14 @@ msg_ok "Set up Enviroment"
 msg_info "Building Frontend"
 cd ./frontend
 export NODE_ENV=development
-yarn install --network-timeout=30000 &>/dev/null
-yarn build &>/dev/null
+$STD yarn install --network-timeout=30000
+$STD yarn build
 cp -r dist/* /app/frontend
 cp -r app-images/* /app/frontend/images
 msg_ok "Built Frontend"
 
 msg_info "Initializing Backend"
-rm -rf /app/config/default.json &>/dev/null
+rm -rf /app/config/default.json
 if [ ! -f /app/config/production.json ]; then
   cat <<'EOF' >/app/config/production.json
 {
@@ -222,7 +223,7 @@ EOF
 fi
 cd /app
 export NODE_ENV=development
-yarn install --network-timeout=30000 &>/dev/null
+$STD yarn install --network-timeout=30000
 msg_ok "Initialized Backend"
 
 msg_info "Creating Service"
@@ -268,12 +269,11 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Starting Services"
-systemctl enable npm &>/dev/null
-systemctl start openresty
-systemctl start npm
+$STD systemctl enable --now openresty
+$STD systemctl enable --now npm
 msg_ok "Started Services"
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
