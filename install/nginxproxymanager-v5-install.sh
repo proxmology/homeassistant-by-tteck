@@ -136,7 +136,7 @@ RELEASE=$(curl -s https://api.github.com/repos/NginxProxyManager/nginx-proxy-man
   awk '{print substr($2, 3, length($2)-4) }')
 
 msg_info "Downloading Nginx Proxy Manager v${RELEASE}"
-$STD wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE}
+wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE}
 tar -xz v${RELEASE}
 cd ./nginx-proxy-manager-${RELEASE}
 msg_ok "Downloaded Nginx Proxy Manager v${RELEASE}"
