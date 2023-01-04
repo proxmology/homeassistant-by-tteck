@@ -311,8 +311,7 @@ function update_script() {
 clear
 header_info
 msg_info "Updating ${APP} LXC"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+pip3 install whoogle-search --upgrade &>/dev/null
 msg_ok "Updated ${APP} LXC"
 msg_ok "Update Successfull"
 exit
