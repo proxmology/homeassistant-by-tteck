@@ -85,6 +85,10 @@ $STD apt-get install -y curl
 $STD apt-get install -y sudo
 msg_ok "Installed Dependencies"
 
+msg_info "Installing YunoHost (Patience)"
+$STD bash <(curl -fsSL https://install.yunohost.org) -a
+msg_ok "Installed YunoHost"
+
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
 if [[ $PASS != $ ]]; then
   msg_info "Customizing Container"
