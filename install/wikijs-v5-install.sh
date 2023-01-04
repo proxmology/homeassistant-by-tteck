@@ -92,7 +92,7 @@ $STD bash <(curl -fsSL https://deb.nodesource.com/setup_18.x)
 msg_ok "Set up Node.js Repository"
 
 msg_info "Installing Node.js"
-$STD apt-get install -y
+$STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Installing Wiki.js"
