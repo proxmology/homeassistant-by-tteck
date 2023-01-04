@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,13 +77,13 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
 msg_ok "Installed Dependencies"
 
 DOCKER_CONFIG_PATH='/etc/docker/daemon.json'
@@ -102,9 +102,9 @@ curl -sSL -o fuse-overlayfs https://github.com/containers/fuse-overlayfs/release
 chmod 755 /usr/local/bin/fuse-overlayfs
 cd ~
 fi
-curl -sL https://umbrel.sh | bash &>/dev/null
+$STD bash <(curl -fsSL https://umbrel.sh)
 systemctl daemon-reload
-systemctl enable --now umbrel-startup.service &>/dev/null
+$STD systemctl enable --now umbrel-startup.service
 msg_ok "Installed Umbrel"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -129,6 +129,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
   systemctl restart sshd
 fi
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
