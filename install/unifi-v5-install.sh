@@ -95,7 +95,8 @@ else
 fi
 
 msg_info "Installing UniFi Network Application (Patience)"
-$STD wget -qL https://get.glennr.nl/unifi/install/install_latest/unifi-latest.sh && bash unifi-latest.sh --skip --add-repository $LOCAL
+wget -qL https://get.glennr.nl/unifi/install/install_latest/unifi-latest.sh
+$STD bash unifi-latest.sh --skip --add-repository $LOCAL
 msg_ok "Installed UniFi Network Application"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
