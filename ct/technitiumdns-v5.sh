@@ -16,8 +16,8 @@ var_cpu="1"
 var_ram="512"
 var_os="debian"
 var_version="11"
-var_install="${NSAPP}-v5-install"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
+var_install="${NSAPP}-v5-install"
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -81,7 +81,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -d /etc/dns ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -123,7 +123,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -280,9 +280,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -303,6 +305,79 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+
+function update_script() {
+clear
+header_info
+msg_info "Updating ${APP} LXC"
+dotnetDir="/opt/dotnet"
+dnsDir="/etc/dns"
+dnsTar="/etc/dns/DnsServerPortable.tar.gz"
+dnsUrl="https://download.technitium.com/dns/DnsServerPortable.tar.gz"
+
+mkdir -p $dnsDir
+installLog="$dnsDir/install.log"
+echo "" >$installLog
+
+echo ""
+echo "==============================="
+echo "Technitium DNS Server Update"
+echo "==============================="
+
+if dotnet --list-runtimes 2>/dev/null | grep -q "Microsoft.NETCore.App 7.0."; then
+	dotnetFound="yes"
+else
+	dotnetFound="no"
+fi
+
+if [ -d $dotnetDir ]; then
+	dotnetUpdate="yes"
+	echo "Updating .NET 7 Runtime..."
+fi
+
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -c 7.0 --runtime dotnet --no-path --install-dir $dotnetDir --verbose >>$installLog 2>&1
+
+if [ ! -f "/usr/bin/dotnet" ]; then
+	ln -s $dotnetDir/dotnet /usr/bin >>$installLog 2>&1
+fi
+
+if dotnet --list-runtimes 2>/dev/null | grep -q "Microsoft.NETCore.App 7.0."; then
+	if [ "$dotnetUpdate" = "yes" ]; then
+		echo ".NET 7 Runtime was updated successfully!"
+	fi
+else
+	echo "Failed to update .NET 7 Runtime. Please try again."
+	exit 1
+fi
+
+if curl -o $dnsTar --fail $dnsUrl >>$installLog 2>&1; then
+	if [ -d $dnsDir ]; then
+		echo "Updating Technitium DNS Server..."
+	fi
+
+	tar -zxf $dnsTar -C $dnsDir >>$installLog 2>&1
+
+	if [ "$(ps --no-headers -o comm 1 | tr -d '\n')" = "systemd" ]; then
+		if [ -f "/etc/systemd/system/dns.service" ]; then
+			echo "Restarting systemd service..."
+			systemctl restart dns.service >>$installLog 2>&1
+		fi
+
+		echo ""
+		echo "Technitium DNS Server was updated successfully!"
+	else
+		echo ""
+		echo "Failed to update Technitium DNS Server: systemd was not detected."
+		exit 1
+	fi
+else
+	echo ""
+	echo "Failed to download Technitium DNS Server from: $dnsUrl"
+	exit 1
+fi
+msg_ok "Update Successfull"
+exit
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
