@@ -310,9 +310,10 @@ function install_script() {
 function update_script() {
 clear
 header_info
-msg_info "Updating ${APP} LXC"
-wget -qL https://get.glennr.nl/unifi/update/unifi-update.sh && bash unifi-update.sh &>/dev/null
-msg_ok "Updated ${APP} LXC"
+msg_info "Updating ${APP}"
+wget -qL https://get.glennr.nl/unifi/update/unifi-update.sh 
+bash unifi-update.sh
+msg_ok "Updated ${APP}"
 msg_ok "Update Successfull"
 exit
 }
