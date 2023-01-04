@@ -198,7 +198,7 @@ msg_ok "Set up Enviroment"
 msg_info "Building Frontend"
 cd ./frontend
 export NODE_ENV=development
-yarn install --network-timeout=30000
+$STD yarn install --network-timeout=30000
 $STD yarn build
 cp -r dist/* /app/frontend
 cp -r app-images/* /app/frontend/images
