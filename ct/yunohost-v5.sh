@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 function header_info {
   cat <<"EOF"
-    ____  __________  _______    _   __
-   / __ \/ ____/ __ )/  _/   |  / | / /
-  / / / / __/ / __  |/ // /| | /  |/ / 
- / /_/ / /_v5/ /_/ // // ___ |/ /|  /  
-/_____/_____/_____/___/_/  |_/_/ |_/   
- 
+__  __                  __  __           __ 
+\ \/ /_  ______v5____  / / / /___  _____/ /_
+ \  / / / / __ \/ __ \/ /_/ / __ \/ ___/ __/
+ / / /_/ / / / / /_/ / __  / /_/ (__  ) /_  
+/_/\__,_/_/ /_/\____/_/ /_/\____/____/\__/  
+                                            
 EOF
 }
 echo -e "Loading..."
-APP="Debian"
-var_disk="2"
-var_cpu="1"
-var_ram="512"
+APP="YunoHost"
+var_disk="20"
+var_cpu="2"
+var_ram="2048"
 var_os="debian"
 var_version="11"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
@@ -345,7 +345,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/ct/c
 msg_info "Starting LXC Container"
 pct start $CTID
 msg_ok "Started LXC Container"
-lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/install/$var_install.sh)" || exit
+lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/install/$var_install.sh)" || exit
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
 pct set $CTID -description "# ${APP} ${var_version} LXC
 ### https://tteck.github.io/Proxmox/
