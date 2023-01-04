@@ -111,7 +111,7 @@ $STD python3 -m pip install --no-cache-dir cffi certbot
 msg_ok "Installed Python"
 
 msg_info "Installing Openresty"
-$STD apt-key add <(curl -fsSLhttps://openresty.org/package/pubkey.gpg)
+$STD apt-key add <(curl -fsSL https://openresty.org/package/pubkey.gpg)
 cat <<EOF >/etc/apt/sources.list.d/openresty.list
 deb http://openresty.org/package/debian bullseye openresty
 EOF
