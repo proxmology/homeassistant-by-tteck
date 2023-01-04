@@ -17,8 +17,8 @@ var_cpu="1"
 var_ram="1024"
 var_os="debian"
 var_version="11"
-var_install="${NSAPP}-v5-install"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
+var_install="${NSAPP}-v5-install"
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -82,7 +82,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -f /lib/systemd/system/npm.service ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -124,7 +124,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -281,9 +281,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -304,6 +306,125 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+
+function update_script() {
+clear
+header_info
+RELEASE=$(curl -s https://api.github.com/repos/NginxProxyManager/nginx-proxy-manager/releases/latest |
+  grep "tag_name" |
+  awk '{print substr($2, 3, length($2)-4) }')
+  
+msg_info "Stopping Services"
+systemctl stop openresty
+systemctl stop npm
+msg_ok "Stopped Services"
+
+msg_info "Cleaning Old Files"
+  rm -rf /app \
+    /var/www/html \
+    /etc/nginx \
+    /var/log/nginx \
+    /var/lib/nginx \
+    /var/cache/nginx &>/dev/null
+msg_ok "Cleaned Old Files"
+
+msg_info "Downloading NPM v${RELEASE}"
+wget -q https://codeload.github.com/NginxProxyManager/nginx-proxy-manager/tar.gz/v${RELEASE} -O - | tar -xz &>/dev/null
+cd nginx-proxy-manager-${RELEASE}
+msg_ok "Downloaded NPM v${RELEASE}"
+
+msg_info "Setting up Enviroment"
+ln -sf /usr/bin/python3 /usr/bin/python
+ln -sf /usr/bin/certbot /opt/certbot/bin/certbot
+ln -sf /usr/local/openresty/nginx/sbin/nginx /usr/sbin/nginx
+ln -sf /usr/local/openresty/nginx/ /etc/nginx
+sed -i "s+0.0.0+${RELEASE}+g" backend/package.json
+sed -i "s+0.0.0+${RELEASE}+g" frontend/package.json
+sed -i 's+^daemon+#daemon+g' docker/rootfs/etc/nginx/nginx.conf
+NGINX_CONFS=$(find "$(pwd)" -type f -name "*.conf")
+for NGINX_CONF in $NGINX_CONFS; do
+  sed -i 's+include conf.d+include /etc/nginx/conf.d+g' "$NGINX_CONF"
+done
+mkdir -p /var/www/html /etc/nginx/logs
+cp -r docker/rootfs/var/www/html/* /var/www/html/
+cp -r docker/rootfs/etc/nginx/* /etc/nginx/
+cp docker/rootfs/etc/letsencrypt.ini /etc/letsencrypt.ini
+cp docker/rootfs/etc/logrotate.d/nginx-proxy-manager /etc/logrotate.d/nginx-proxy-manager
+ln -sf /etc/nginx/nginx.conf /etc/nginx/conf/nginx.conf
+rm -f /etc/nginx/conf.d/dev.conf
+mkdir -p /tmp/nginx/body \
+  /run/nginx \
+  /data/nginx \
+  /data/custom_ssl \
+  /data/logs \
+  /data/access \
+  /data/nginx/default_host \
+  /data/nginx/default_www \
+  /data/nginx/proxy_host \
+  /data/nginx/redirection_host \
+  /data/nginx/stream \
+  /data/nginx/dead_host \
+  /data/nginx/temp \
+  /var/lib/nginx/cache/public \
+  /var/lib/nginx/cache/private \
+  /var/cache/nginx/proxy_temp
+chmod -R 777 /var/cache/nginx
+chown root /tmp/nginx
+echo resolver "$(awk 'BEGIN{ORS=" "} $1=="nameserver" {print ($2 ~ ":")? "["$2"]": $2}' /etc/resolv.conf);" >/etc/nginx/conf.d/include/resolvers.conf
+if [ ! -f /data/nginx/dummycert.pem ] || [ ! -f /data/nginx/dummykey.pem ]; then
+  echo -e "${CHECKMARK} \e[1;92m Generating dummy SSL Certificate... \e[0m"
+  openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj "/O=Nginx Proxy Manager/OU=Dummy Certificate/CN=localhost" -keyout /data/nginx/dummykey.pem -out /data/nginx/dummycert.pem &>/dev/null
+fi
+mkdir -p /app/global /app/frontend/images
+cp -r backend/* /app
+cp -r global/* /app/global
+msg_ok "Setup Enviroment"
+
+msg_info "Building Frontend"
+cd ./frontend
+export NODE_ENV=development
+yarn install --network-timeout=30000 &>/dev/null
+yarn build &>/dev/null
+cp -r dist/* /app/frontend
+cp -r app-images/* /app/frontend/images
+msg_ok "Built Frontend"
+
+
+msg_info "Initializing Backend"
+rm -rf /app/config/default.json &>/dev/null
+if [ ! -f /app/config/production.json ]; then
+  cat <<'EOF' >/app/config/production.json
+{
+  "database": {
+    "engine": "knex-native",
+    "knex": {
+      "client": "sqlite3",
+      "connection": {
+        "filename": "/data/database.sqlite"
+      }
+    }
+  }
+}
+EOF
+fi
+cd /app
+export NODE_ENV=development
+yarn install --network-timeout=30000 &>/dev/null
+msg_ok "Initialized Backend"
+
+msg_info "Starting Services"
+systemctl enable npm &>/dev/null
+systemctl start openresty
+systemctl start npm
+msg_ok "Started Services"
+
+msg_info "Cleaning up"
+rm -rf nginx-proxy-manager-${RELEASE}
+msg_ok "Cleaned"
+
+msg_ok "Update Successfull"
+exit
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
@@ -338,7 +459,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/ct/c
 msg_info "Starting LXC Container"
 pct start $CTID
 msg_ok "Started LXC Container"
-lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/install/nginx-proxy-manager-install.sh)" || exit
+lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/install/nginx-proxy-manager-install.sh)" || exit
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
 pct set $CTID -description "# ${APP} LXC
 ### https://tteck.github.io/Proxmox/
