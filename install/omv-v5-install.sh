@@ -20,7 +20,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,19 +77,19 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
-apt-get install -y gnupg &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Installing OpenMediaVault (Patience)"
-wget -O "/etc/apt/trusted.gpg.d/openmediavault-archive-keyring.asc" https://packages.openmediavault.org/public/archive.key &>/dev/null
-apt-key add "/etc/apt/trusted.gpg.d/openmediavault-archive-keyring.asc" &>/dev/null
+wget -q -O "/etc/apt/trusted.gpg.d/openmediavault-archive-keyring.asc" https://packages.openmediavault.org/public/archive.key
+$STD apt-key add "/etc/apt/trusted.gpg.d/openmediavault-archive-keyring.asc" &>/dev/null
 
 cat <<EOF >>/etc/apt/sources.list.d/openmediavault.list
 deb https://packages.openmediavault.org/public shaitan main
@@ -102,9 +102,9 @@ deb https://packages.openmediavault.org/public shaitan main
 # deb https://packages.openmediavault.org/public shaitan partner
 # deb https://downloads.sourceforge.net/project/openmediavault/packages shaitan partner
 EOF
-apt-get update &>/dev/null
-apt-get -y install openmediavault-keyring &>/dev/null
-apt-get --yes --auto-remove --show-upgraded --allow-downgrades --allow-change-held-packages --no-install-recommends install openmediavault &>/dev/null
+$STD apt-get update
+$STD apt-get -y install openmediavault-keyring
+$STD apt-get --yes --auto-remove --show-upgraded --allow-downgrades --allow-change-held-packages --no-install-recommends install openmediavault
 omv-confdbadm populate
 msg_ok "Installed OpenMediaVault"
 
@@ -130,6 +130,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
