@@ -88,7 +88,10 @@ msg_ok "Installed Dependencies"
 
 msg_info "Installing Syncthing"
 $STD apt-key add <(curl -fsSL https://syncthing.net/release-key.gpg)
-echo "deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing stable" | sudo tee /etc/apt/sources.list.d/syncthing.list
+cat <<EOF >/etc/apt/sources.list.d/syncthing.list
+deb https://apt.syncthing.net/ syncthing stable
+EOF
+#echo "deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing stable" | sudo tee /etc/apt/sources.list.d/syncthing.list
 $STD apt-get update
 $STD apt-get install -y syncthing
 $STD systemctl enable -now syncthing@root.service
