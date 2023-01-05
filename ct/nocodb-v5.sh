@@ -16,8 +16,8 @@ var_cpu="1"
 var_ram="1024"
 var_os="debian"
 var_version="11"
-var_install="${NSAPP}-v5-install"
 NSAPP=$(echo ${APP,,} | tr -d ' ')
+var_install="${NSAPP}-v5-install"
 INTEGER='^[0-9]+$'
 YW=$(echo "\033[33m")
 BL=$(echo "\033[36m")
@@ -81,7 +81,7 @@ if command -v pveversion >/dev/null 2>&1; then
   fi
 fi
 if ! command -v pveversion >/dev/null 2>&1; then
-  if [[ ! -d /opt/Shinobi ]]; then
+  if [[ ! -f /etc/systemd/system/nocodb.service ]]; then
     msg_error "No ${APP} Installation Found!";
     exit 
   fi
@@ -123,7 +123,7 @@ function default_settings() {
   MAC=""
   echo -e "${DGN}Using VLAN Tag: ${BGN}Default${CL}"
   VLAN=""
-    echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
+  echo -e "${DGN}Enable Root SSH Access: ${BGN}No${CL}"
   SSH="no"
   echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
   VERB="no"
@@ -280,9 +280,11 @@ function advanced_settings() {
   if (whiptail --defaultno --title "VERBOSE MODE" --yesno "Enable Verbose Mode?" 10 58); then
       echo -e "${DGN}Enable Verbose Mode: ${BGN}Yes${CL}"
       VERB="yes"
+      VERB2=""
   else
       echo -e "${DGN}Enable Verbose Mode: ${BGN}No${CL}"
       VERB="no"
+      VERB2="silent"
   fi
   if (whiptail --title "ADVANCED SETTINGS COMPLETE" --yesno "Ready to create ${APP} LXC?" --no-button Do-Over 10 58); then
     echo -e "${RD}Creating a ${APP} LXC using the above advanced settings${CL}"
@@ -303,6 +305,20 @@ function install_script() {
     echo -e "${RD}Using Advanced Settings${CL}"
     advanced_settings
   fi
+}
+
+function update_script() {
+clear
+header_info
+msg_info "Updating ${APP}"
+cd /opt/nocodb
+npm uninstall -s --save nocodb &>/dev/null
+npm install -s --save nocodb &>/dev/null
+systemctl restart nocodb.service
+msg_ok "Updated ${APP}"
+msg_ok "Update Successfull"
+
+exit
 }
 clear
 if ! command -v pveversion >/dev/null 2>&1; then update_script; else install_script; fi
@@ -337,7 +353,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/ct/c
 msg_info "Starting LXC Container"
 pct start $CTID
 msg_ok "Started LXC Container"
-lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/main/install/$var_install.sh)" || exit
+lxc-attach -n $CTID -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/tteck/Proxmox/v5/install/$var_install.sh)" || exit
 IP=$(pct exec $CTID ip a s dev eth0 | sed -n '/inet / s/\// /p' | awk '{print $2}')
 pct set $CTID -description "# ${APP} LXC
 ### https://tteck.github.io/Proxmox/
