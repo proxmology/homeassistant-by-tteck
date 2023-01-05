@@ -87,7 +87,7 @@ $STD apt-get install -y gnupg
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Syncthing"
-curl -sSL -o /usr/share/keyrings/syncthing-archive-keyring.gpg https://syncthing.net/release-key.gpg
+$STD apt-key add <(curl -fsSL https://syncthing.net/release-key.gpg)
 echo "deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing stable" | sudo tee /etc/apt/sources.list.d/syncthing.list
 $STD apt-get update
 $STD apt-get install -y syncthing
