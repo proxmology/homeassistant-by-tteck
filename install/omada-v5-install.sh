@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,23 +77,23 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get -y install curl &>/dev/null
-apt-get -y install sudo &>/dev/null
-apt-get -y install gnupg &>/dev/null
-apt-get -y install openjdk-8-jre-headless &>/dev/null
-apt-get -y install jsvc &>/dev/null
+$STD apt-get -y install curl
+$STD apt-get -y install sudo
+$STD apt-get -y install gnupg
+$STD apt-get -y install openjdk-8-jre-headless
+$STD apt-get -y install jsvc
 wget -qL https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/3.6/multiverse/binary-amd64/mongodb-org-server_3.6.23_amd64.deb
-sudo dpkg -i mongodb-org-server_3.6.23_amd64.deb &>/dev/null
+$STD dpkg -i mongodb-org-server_3.6.23_amd64.deb
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Omada Controller v5.6.3"
 wget -qL https://static.tp-link.com/upload/software/2022/202211/20221121/Omada_SDN_Controller_v5.7.4_Linux_x64.deb
-sudo dpkg -i Omada_SDN_Controller_v5.7.4_Linux_x64.deb &>/dev/null
+$STD dpkg -i Omada_SDN_Controller_v5.7.4_Linux_x64.deb
 msg_ok "Installed Omada Controller"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -118,6 +118,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
