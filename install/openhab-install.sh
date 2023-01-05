@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -77,35 +77,34 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get install -y curl &>/dev/null
-apt-get install -y sudo &>/dev/null
-apt-get install -y gnupg &>/dev/null
-apt-get install -y apt-transport-https &>/dev/null
+$STD apt-get install -y curl
+$STD apt-get install -y sudo
+$STD apt-get install -y gnupg
+$STD apt-get install -y apt-transport-https
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Azul Zulu"
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9 &>/dev/null
-curl -O https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb &>/dev/null
-apt-get install ./zulu-repo_1.0.0-3_all.deb &>/dev/null
-apt-get update &>/dev/null
-apt-get -y install zulu11-jdk &>/dev/null
+$STD apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
+wget -q https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb
+$STD apt-get install ./zulu-repo_1.0.0-3_all.deb
+$STD apt-get update
+$STD apt-get -y install zulu11-jdk
 msg_ok "Installed Azul Zulu"
 
 msg_info "Installing openHAB"
 curl -fsSL "https://openhab.jfrog.io/artifactory/api/gpg/key/public" | gpg --dearmor >openhab.gpg
 mv openhab.gpg /usr/share/keyrings
 chmod u=rw,g=r,o=r /usr/share/keyrings/openhab.gpg
-echo 'deb [signed-by=/usr/share/keyrings/openhab.gpg] https://openhab.jfrog.io/artifactory/openhab-linuxpkg stable main' | tee /etc/apt/sources.list.d/openhab.list &>/dev/null
-apt update &>/dev/null
-apt-get -y install openhab &>/dev/null
+sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/openhab.gpg] https://openhab.jfrog.io/artifactory/openhab-linuxpkg stable main" > /etc/apt/sources.list.d/openhab.list'
+$STD apt update
+$STD apt-get -y install openhab
 systemctl daemon-reload
-systemctl enable openhab.service &>/dev/null
-systemctl start openhab.service
+$STD systemctl enable --now openhab.service
 msg_ok "Installed openHAB"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
@@ -130,6 +129,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
