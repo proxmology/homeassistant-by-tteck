@@ -19,7 +19,7 @@ set -o pipefail
 shopt -s expand_aliases
 alias die='EXIT=$? LINE=$LINENO error_exit'
 trap die ERR
-
+silent() { "$@" > /dev/null 2>&1; }
 function error_exit() {
   trap - ERR
   local reason="Unknown failure occurred."
@@ -76,15 +76,15 @@ alias die='EXIT=$? LINE=$LINENO error_exit'
 set -e
 
 msg_info "Updating Container OS"
-apt-get update &>/dev/null
-apt-get -y upgrade &>/dev/null
+$STD apt-get update
+$STD apt-get -y upgrade
 msg_ok "Updated Container OS"
 
 msg_info "Installing Dependencies"
-apt-get -y install software-properties-common apt-utils &>/dev/null
-apt-get -y update &>/dev/null
-apt-get -y upgrade &>/dev/null
-apt-get -y install \
+$STD apt-get -y install software-properties-common apt-utils
+$STD apt-get -y update
+$STD apt-get -y upgrade
+$STD apt-get -y install \
     build-essential \
     gcc \
     gir1.2-gtk-3.0 \
@@ -98,11 +98,11 @@ apt-get -y install \
     librsvg2-dev \
     pkg-config \
     curl \
-    sudo &>/dev/null
+    sudo
 msg_ok "Installed Dependencies"
 
 msg_info "Installing GStreamer"
-apt-get -y install \
+$STD apt-get -y install \
     gstreamer1.0-tools \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
@@ -112,19 +112,19 @@ apt-get -y install \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
-    gstreamer1.0-alsa &>/dev/null
+    gstreamer1.0-alsa
 msg_ok "Installed GStreamer"
 
 msg_info "Setting up Node.js Repository"
-curl -fsSL https://deb.nodesource.com/setup_16.x | bash - &>/dev/null
+$STD bash <(curl -fsSL https://deb.nodesource.com/setup_16.x)
 msg_ok "Set up Node.js Repository"
 
 msg_info "Installing Node.js"
-apt-get install -y nodejs &>/dev/null
+$STD apt-get install -y nodejs
 msg_ok "Installed Node.js"
 
 msg_info "Installing Python3"
-apt-get -y install \
+$STD apt-get -y install \
     python3 \
     python3-dev \
     python3-gi \
@@ -136,9 +136,9 @@ apt-get -y install \
     python3-pip \
     python3-setuptools \
     python3-skimage \
-    python3-wheel &>/dev/null
-python3 -m pip install --upgrade pip &>/dev/null
-python3 -m pip install aiofiles debugpy typing_extensions typing &>/dev/null
+    python3-wheel
+$STD python3 -m pip install --upgrade pip
+$STD python3 -m pip install aiofiles debugpy typing_extensions typing
 msg_ok "Installed Python3"
 
 read -r -p "Would you like to add Coral Edge TPU support? <y/N> " prompt
@@ -150,15 +150,17 @@ fi
 
 if [[ $CORAL == "Y" ]]; then
 msg_info "Adding Coral Edge TPU Support"
-echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | tee /etc/apt/sources.list.d/coral-edgetpu.list &>/dev/null
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - &>/dev/null
-apt-get -y update &>/dev/null
-apt-get -y install libedgetpu1-std &>/dev/null
+$STD apt-key add <(curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg)
+cat <<EOF >/etc/apt/sources.list.d/coral-edgetpu.list
+deb https://packages.cloud.google.com/apt coral-edgetpu-stable main
+EOF
+$STD apt-get -y update
+$STD apt-get -y install libedgetpu1-std
 msg_ok "Coral Edge TPU Support Added"
 fi
 
 msg_info "Installing Scrypted"
-sudo -u root npx -y scrypted@latest install-server &>/dev/null
+$STD sudo -u root npx -y scrypted@latest install-server
 msg_info "Installed Scrypted"
 
 msg_info "Creating Service"
@@ -177,7 +179,7 @@ RestartSec=3
 
 [Install]
 WantedBy=multi-user.target" >$service_path
-systemctl enable --now scrypted.service &>/dev/null
+$STD systemctl enable --now scrypted.service
 msg_ok "Created Service"
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
 if [[ $PASS != $ ]]; then
@@ -201,6 +203,6 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
-apt-get autoremove >/dev/null
-apt-get autoclean >/dev/null
+$STD apt-get autoremove
+$STD apt-get autoclean
 msg_ok "Cleaned"
