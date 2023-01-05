@@ -91,7 +91,7 @@ wget -qL https://repo.mongodb.org/apt/ubuntu/dists/bionic/mongodb-org/3.6/multiv
 $STD dpkg -i mongodb-org-server_3.6.23_amd64.deb
 msg_ok "Installed Dependencies"
 
-msg_info "Installing Omada Controller v5.6.3"
+msg_info "Installing Omada Controller v5.7.4"
 wget -qL https://static.tp-link.com/upload/software/2022/202211/20221121/Omada_SDN_Controller_v5.7.4_Linux_x64.deb
 $STD dpkg -i Omada_SDN_Controller_v5.7.4_Linux_x64.deb
 msg_ok "Installed Omada Controller"
@@ -118,6 +118,7 @@ if [[ "${SSH_ROOT}" == "yes" ]]; then
 fi
 
 msg_info "Cleaning up"
+rm -rf Omada_SDN_Controller_v5.7.4_Linux_x64.deb mongodb-org-server_3.6.23_amd64.deb
 $STD apt-get autoremove
 $STD apt-get autoclean
 msg_ok "Cleaned"
