@@ -93,10 +93,10 @@ deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.sy
 EOF
 $STD apt-get update
 $STD apt-get install -y syncthing
+$STD systemctl enable syncthing@root.service
 systemctl start syncthing@root.service
 sed -i "{s/127.0.0.1:8384/0.0.0.0:8384/g}" /root/.config/syncthing/config.xml
 systemctl restart syncthing@root.service
-$STD systemctl enable syncthing@root.service
 msg_ok "Installed Syncthing"
 
 PASS=$(grep -w "root" /etc/shadow | cut -b6)
