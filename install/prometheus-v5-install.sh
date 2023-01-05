@@ -87,11 +87,12 @@ $STD apt-get install -y sudo
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Prometheus"
+RELEASE=$(curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep "tag_name" | awk '{print substr($2, 3, length($2)-4) }')
 mkdir -p /etc/prometheus
 mkdir -p /var/lib/prometheus
-$STD wget https://github.com/prometheus/prometheus/releases/download/v2.36.2/prometheus-2.36.2.linux-amd64.tar.gz
-$STD tar -xvf prometheus-2.36.2.linux-amd64.tar.gz
-cd prometheus-2.36.2.linux-amd64
+$STD wget https://github.com/prometheus/prometheus/releases/download/v${RELEASE}/prometheus-${RELEASE}.linux-amd64.tar.gz
+$STD tar -xvf prometheus-${RELEASE}.linux-amd64.tar.gz
+cd prometheus-${RELEASE}.linux-amd64
 mv prometheus promtool /usr/local/bin/
 mv consoles/ console_libraries/ /etc/prometheus/
 mv prometheus.yml /etc/prometheus/prometheus.yml
@@ -144,5 +145,5 @@ fi
 msg_info "Cleaning up"
 $STD apt-get autoremove
 $STD apt-get autoclean
-rm -rf /root/prometheus-2.36.2.linux-amd64 /root/prometheus-2.36.2.linux-amd64.tar.gz
+rm -rf /root/prometheus-${RELEASE}.linux-amd64 /root/prometheus-${RELEASE}.linux-amd64.tar.gz
 msg_ok "Cleaned"
