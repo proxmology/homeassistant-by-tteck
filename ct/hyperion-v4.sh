@@ -10,6 +10,8 @@ cat <<"EOF"
 
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="Hyperion"
 var_disk="2"

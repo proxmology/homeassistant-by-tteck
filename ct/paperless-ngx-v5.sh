@@ -9,6 +9,8 @@ function header_info {
            /_/                                         /____/        
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="Paperless-ngx"
 var_disk="4"

@@ -10,6 +10,8 @@ function header_info {
 
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="Keycloak"
 var_disk="4"

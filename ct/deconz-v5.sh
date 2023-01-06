@@ -9,6 +9,8 @@ function header_info {
  
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="deCONZ"
 var_disk="4"

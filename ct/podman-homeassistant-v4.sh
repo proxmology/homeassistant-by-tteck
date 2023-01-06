@@ -13,6 +13,8 @@ function header_info {
  
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="Podman-Home Assistant"
 var_disk="16"

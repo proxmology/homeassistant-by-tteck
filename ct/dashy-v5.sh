@@ -9,6 +9,8 @@ function header_info {
                    v5  /____/   
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="Dashy"
 var_disk="3"

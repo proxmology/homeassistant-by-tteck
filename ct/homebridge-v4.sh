@@ -8,6 +8,8 @@
  
 EOF
 }
+clear
+header_info
 echo -e "Loading..."
 APP="Homebridge"
 var_disk="4"
